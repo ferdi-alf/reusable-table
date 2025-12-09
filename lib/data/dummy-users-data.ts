@@ -352,5 +352,5 @@ export const getUsersWithoutTasks = (limit: number = 15): User[] => {
 };
 
 export const getTasksByUserId = (userId: number): Task[] => {
-  return allTaskk.filter((task) => task.id === userId);
+  return allTaskk.filter((task) => task.userId === userId);
 };

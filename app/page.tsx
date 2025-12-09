@@ -1,64 +1,148 @@
-import Image from "next/image";
+"use client";
+
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Task, User } from "@/types/users";
+import DataTable from "@/components/data-table";
+import TasksList from "@/components/task-list";
 
 export default function Home() {
+  const userColumns = [
+    { key: "username", label: "Username" },
+    { key: "name", label: "Full Name" },
+    { key: "email", label: "Email" },
+    {
+      key: "totalTasks",
+      label: "Total Tasks",
+      align: "center" as const,
+      render: (value: number) => (
+        <Badge variant={value > 0 ? "default" : "secondary"}>
+          {value} tasks
+        </Badge>
+      ),
+    },
+  ];
+
+  // Actions
+  const userActions = (row: User) => (
+    <>
+      <Button variant="ghost" size="sm">
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm">
+        <Pencil className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm" className="text-destructive">
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </>
+  );
+
+  const handleSearch = (query: string) => {
+    console.log("Searching for:", query);
+    // Custom
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-zinc-100 font-sans dark:bg-black">
+      <main className="w-full max-w-6xl p-4">
+        <Tabs defaultValue="parent-only">
+          <TabsList className="mb-4">
+            <TabsTrigger value="parent-only">Parent Only</TabsTrigger>
+            <TabsTrigger value="parent-with-children">
+              Parent With Children
+            </TabsTrigger>
+            <TabsTrigger value="parent-on-demand">Parent On Demand</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="parent-only">
+            <div className="w-full p-6 bg-white rounded-lg shadow-md">
+              <DataTable
+                title="Users Data (With Actions)"
+                fetchUrl="/api/users"
+                columns={userColumns}
+                actions={userActions}
+                pagination={{
+                  enabled: true,
+                  pageSize: 10,
+                  pageSizeOptions: [5, 10, 15, 20],
+                }}
+                search={{
+                  enabled: true,
+                  placeholder: "Search users...",
+                  debounceMs: 300,
+                  onSearch: handleSearch,
+                }}
+                striped
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="parent-with-children">
+            <div className="w-full p-6 bg-white rounded-lg shadow-md">
+              <DataTable<User & { tasks: Task[] }, Task[]>
+                title="Users with Tasks (Pre-loaded)"
+                fetchUrl="/api/users/with-tasks"
+                columns={userColumns}
+                expandable={{
+                  condition: (row) => row.totalTasks > 0,
+                  render: (tasks, row, loading, error) => (
+                    <TasksList
+                      tasks={row.tasks}
+                      loading={loading}
+                      error={error}
+                    />
+                  ),
+                }}
+                actions={userActions}
+                pagination={{
+                  enabled: true,
+                  pageSize: 10,
+                }}
+                search={{
+                  enabled: true,
+                  placeholder: "Search users with tasks...",
+                }}
+                striped
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="parent-on-demand">
+            <div className="w-full p-6 bg-white rounded-lg shadow-md">
+              <DataTable<User, Task[]>
+                title="Users (On-Demand Tasks)"
+                columns={userColumns}
+                fetchUrl="/api/users"
+                expandable={{
+                  condition: (row) => row.totalTasks > 0,
+                  fetchUrl: (row) => `/api/users/${row.id}/tasks`,
+                  transform: (response: Task[]) => response,
+                  render: (tasks, row, loading, error) => (
+                    <TasksList tasks={tasks} loading={loading} error={error} />
+                  ),
+                  cacheKey: (row: User) => `user-${row.id}-tasks`,
+                }}
+                actions={userActions}
+                pagination={{
+                  enabled: true,
+                  pageSize: 10,
+                  pageSizeOptions: [5, 10, 15, 20],
+                }}
+                search={{
+                  enabled: true,
+                  placeholder: "Search users...",
+                  debounceMs: 300,
+                  onSearch: handleSearch,
+                }}
+                striped
+                loadingRows={8}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

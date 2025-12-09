@@ -4,16 +4,17 @@ import { NextResponse } from "next/server";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await props.params;
     const userId = parseInt(params.id);
 
     if (isNaN(userId)) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalif user ID",
+          error: "Invalid user ID",
         },
         { status: 400 }
       );
